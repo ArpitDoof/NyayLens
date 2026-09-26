@@ -1,0 +1,23 @@
+#Virtual environment
+.venv/
+
+#Python
+__pycache__/
+*.py[cod]
+
+#Jupyter
+.ipynb_checkpoints/
+
+#Data
+data/raw/
+data/processed/
+
+#Environment variables
+.env
+
+#macos
+.DS_Store
+
+#IDE
+.vscode/
+.idea/
