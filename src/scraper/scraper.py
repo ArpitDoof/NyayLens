@@ -35,6 +35,3 @@ def extract_case_details(html):
 
     return data 
     
-
-
-
