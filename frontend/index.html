@@ -38,22 +38,127 @@
 </main>
 <footer><div>NyayLens&nbsp; | &nbsp;Making Legal Information Accessible</div><div class="links"><a href="#about">About</a><a href="#privacy">Privacy</a><a href="mailto:contact@nyaylens.example">Contact</a></div></footer>
 <script>
-const cases=[
-{id:"DEMO-001",title:"State vs. Kumar",category:"Criminal Law",type:"Appeal",date:"2025-04-10",year:2025,desc:"The court examined the evidence and delivered its judgment. The key issue was the admissibility of the evidence under the relevant provisions of the Criminal Procedure Code...",keywords:"state kumar criminal evidence appeal procedure"},
-{id:"DEMO-002",title:"Kumar vs. State",category:"Civil Law",type:"Petition",date:"2024-12-15",year:2024,desc:"The petitioner challenged the order passed by the lower court. The High Court considered the submissions and relevant legal provisions before delivering its decision...",keywords:"kumar state civil petition lower court order"},
-{id:"DEMO-003",title:"Ramesh Kumar vs. Union of India",category:"Constitutional Law",type:"Writ Petition",date:"2023-08-22",year:2023,desc:"The issue before the court was whether the action of the authorities was in accordance with the principles of natural justice. The court held that...",keywords:"ramesh kumar union india constitutional writ natural justice"}
-];
-function render(){
- const q=document.getElementById('query').value.trim().toLowerCase(),cat=document.getElementById('category').value,type=document.getElementById('type').value;
- const from=Number(document.getElementById('yearFrom').value)||0,to=Number(document.getElementById('yearTo').value)||9999;
- let rows=cases.filter(c=>(!q||(c.title+" "+c.category+" "+c.type+" "+c.desc+" "+c.keywords).toLowerCase().includes(q))&&(!cat||c.category===cat)&&(!type||c.type===type)&&c.year>=from&&c.year<=to);
- const sort=document.getElementById('sort').value;if(sort==="newest")rows.sort((a,b)=>b.year-a.year);if(sort==="oldest")rows.sort((a,b)=>a.year-b.year);if(sort==="az")rows.sort((a,b)=>a.title.localeCompare(b.title));
- document.getElementById('countText').innerHTML=`Showing ${rows.length} result${rows.length===1?'':'s'} for <strong>“${q.replace(/[&<>"]/g,'')}”</strong>`;
- document.getElementById('caseList').innerHTML=rows.map(c=>`<article class="case"><h3>${c.title}</h3><div class="badges"><span class="badge ${c.category==='Criminal Law'?'criminal':c.category==='Civil Law'?'civil':'constitutional'}">${c.category}</span><span class="badge type">${c.type}</span><span class="badge date">▦ &nbsp;${c.date}</span></div><p class="desc">${c.desc}</p><button class="view" onclick="viewCase('${c.id}')">▤ &nbsp;View Full Judgment</button></article>`).join('');
- document.getElementById('empty').style.display=rows.length?'none':'block';
+
+async function render() {
+    const query = document.getElementById("query").value.trim();
+
+    const caseList = document.getElementById("caseList");
+    const empty = document.getElementById("empty");
+    const countText = document.getElementById("countText");
+
+    caseList.innerHTML = "<p>Loading judgments...</p>";
+    empty.style.display = "none";
+
+    try {
+        // Request data from our Flask API.
+        const response = await fetch(
+            `/api/judgments?q=${encodeURIComponent(query)}`
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch judgments");
+        }
+
+        const data = await response.json();
+
+        // Get actual records from SQLite.
+        let rows = data.results;
+
+        // Sorting.
+        const sort = document.getElementById("sort").value;
+
+        if (sort === "newest") {
+            rows.sort((a, b) =>
+                (b.decision_date || "").localeCompare(a.decision_date || "")
+            );
+        } else if (sort === "oldest") {
+            rows.sort((a, b) =>
+                (a.decision_date || "").localeCompare(b.decision_date || "")
+            );
+        } else if (sort === "az") {
+            rows.sort((a, b) =>
+                (a.title || "").localeCompare(b.title || "")
+            );
+        }
+
+        countText.textContent =
+            `Showing ${data.returned} of ${data.total} matching judgments`;
+
+        if (rows.length === 0) {
+            caseList.innerHTML = "";
+            empty.style.display = "block";
+            return;
+        }
+
+        caseList.innerHTML = rows.map(c => `
+            <article class="case">
+                <h3>${escapeHTML(c.title || "Untitled judgment")}</h3>
+
+                <div class="badges">
+                    <span class="badge type">
+                        ${escapeHTML(c.citation || "Citation unavailable")}
+                    </span>
+
+                    <span class="badge date">
+                        ${escapeHTML(c.decision_date || "Date unavailable")}
+                    </span>
+                </div>
+
+                <p class="desc">
+                    <strong>Petitioner:</strong>
+                    ${escapeHTML(c.petitioner || "Not available")}
+                    <br>
+
+                    <strong>Respondent:</strong>
+                    ${escapeHTML(c.respondent || "Not available")}
+                    <br>
+
+                    <strong>Judge:</strong>
+                    ${escapeHTML(c.judge || "Not available")}
+                    <br>
+
+                    <strong>Outcome:</strong>
+                    ${escapeHTML(c.disposal_nature || "Not available")}
+                </p>
+            </article>
+        `).join("");
+
+    } catch (error) {
+        console.error(error);
+        caseList.innerHTML = "";
+        countText.textContent = "Unable to load judgments.";
+    }
 }
-function viewCase(id){const c=cases.find(x=>x.id===id);alert(`${c.title}\n\nCategory: ${c.category}\nCase type: ${c.type}\nDecision date: ${c.date}\n\nThis is an illustrative demo record. Connect your backend to open the verified full judgment document.`)}
-document.getElementById('searchBtn').addEventListener('click',render);document.getElementById('query').addEventListener('keydown',e=>{if(e.key==='Enter')render()});document.getElementById('applyBtn').addEventListener('click',render);document.getElementById('sort').addEventListener('change',render);
-document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('category').value='';document.getElementById('type').value='';document.getElementById('yearFrom').value='';document.getElementById('yearTo').value='';render()});
+
+
+// Escape HTML so database text is displayed safely.
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+
+// Event listeners.
+document.getElementById("searchBtn")
+    .addEventListener("click", render);
+
+document.getElementById("query")
+    .addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            render();
+        }
+    });
+
+document.getElementById("sort")
+    .addEventListener("change", render);
+
+// Initial load.
 render();
-</script></body></html>
+
+</script>
+</body></html>
