@@ -8,7 +8,7 @@ from flask import send_from_directory
 main = Blueprint("main", __name__)
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
-DB_FILE = ROOT_DIR / "data" / "processed" / "nyayalens.db"
+DB_FILE = ROOT_DIR / "data" / "processed" / "nyayalens_clean.db"
 
 
 def get_db_connection():
