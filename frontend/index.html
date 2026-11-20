@@ -397,6 +397,33 @@
             color: var(--muted)
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            padding: 24px 0;
+        }
+
+        .pagination button {
+            padding: 10px 18px;
+            border: 1px solid #bdc8d7;
+            border-radius: 8px;
+            background: white;
+            color: #1552aa;
+            font-weight: 600;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            font-weight: 600;
+            color: #263446;
+        }
+
         footer {
             background: linear-gradient(110deg, #143b63, #0e2c4c);
             color: white;
@@ -677,6 +704,11 @@
                     </select></label>
             </div>
             <div class="case-list" id="caseList"></div>
+            <div class="pagination" id="pagination">
+                <button id="prevPage" disabled>← Previous</button>
+                <span id="pageInfo">Page 1</span>
+                <button id="nextPage" disabled>Next →</button>
+            </div>
             <div class="empty" id="empty">No judgments match these filters. Try changing your search or clearing the
                 filters.</div>
         </section>
@@ -687,9 +719,15 @@
                 href="mailto:contact@nyaylens.example">Contact</a></div>
     </footer>
     <script>
+        let currentPage = 1;
 
-        async function render() {
+        async function render(page = 1) {
+            currentPage = page;
+
             const query = document.getElementById("query").value.trim();
+            const yearFrom = document.getElementById("yearFrom").value.trim();
+            const yearTo = document.getElementById("yearTo").value.trim();
+            const sort = document.getElementById("sort").value;
 
             const caseList = document.getElementById("caseList");
             const empty = document.getElementById("empty");
@@ -698,10 +736,19 @@
             caseList.innerHTML = "<p>Loading judgments...</p>";
             empty.style.display = "none";
 
+            const params = new URLSearchParams({
+                q: query,
+                page: currentPage,
+                per_page: 20,
+                sort: sort
+            });
+
+            if (yearFrom) params.set("year_from", yearFrom);
+            if (yearTo) params.set("year_to", yearTo);
+
             try {
-                // Request data from our Flask API.
                 const response = await fetch(
-                    `/api/judgments?q=${encodeURIComponent(query)}`
+                    `/api/judgments?${params.toString()}`
                 );
 
                 if (!response.ok) {
@@ -709,29 +756,19 @@
                 }
 
                 const data = await response.json();
-
-                // Get actual records from SQLite.
-                let rows = data.results;
-
-                // Sorting.
-                const sort = document.getElementById("sort").value;
-
-                if (sort === "newest") {
-                    rows.sort((a, b) =>
-                        (b.decision_date || "").localeCompare(a.decision_date || "")
-                    );
-                } else if (sort === "oldest") {
-                    rows.sort((a, b) =>
-                        (a.decision_date || "").localeCompare(b.decision_date || "")
-                    );
-                } else if (sort === "az") {
-                    rows.sort((a, b) =>
-                        (a.title || "").localeCompare(b.title || "")
-                    );
-                }
+                const rows = data.results;
 
                 countText.textContent =
-                    `Showing ${data.returned} of ${data.total} matching judgments`;
+                    `Showing ${data.total === 0 ? 0 : (data.page - 1) * data.per_page + 1}
+             – ${(data.page - 1) * data.per_page + data.returned}
+             of ${data.total} matching judgments`;
+
+                // Update pagination controls
+                document.getElementById("prevPage").disabled = !data.has_prev;
+                document.getElementById("nextPage").disabled = !data.has_next;
+
+                document.getElementById("pageInfo").textContent =
+                    `Page ${data.page} of ${data.total_pages}`;
 
                 if (rows.length === 0) {
                     caseList.innerHTML = "";
@@ -780,6 +817,7 @@
         }
 
 
+
         // Escape HTML so database text is displayed safely.
         function escapeHTML(value) {
             return String(value).replace(/[&<>"']/g, char => ({
@@ -794,22 +832,46 @@
 
         // Event listeners.
         document.getElementById("searchBtn")
-            .addEventListener("click", render);
+            .addEventListener("click", () => render(1));
 
         document.getElementById("query")
             .addEventListener("keydown", event => {
-                if (event.key === "Enter") {
-                    render();
-                }
+                if (event.key === "Enter") render(1);
             });
 
         document.getElementById("sort")
-            .addEventListener("change", render);
+            .addEventListener("change", () => render(1));
+
+        document.getElementById("applyBtn")
+            .addEventListener("click", () => render(1));
+
+        document.getElementById("clearBtn")
+            .addEventListener("click", () => {
+                document.getElementById("query").value = "";
+                document.getElementById("yearFrom").value = "";
+                document.getElementById("yearTo").value = "";
+                document.getElementById("sort").value = "newest";
+                render(1);
+            });
+
+        document.getElementById("prevPage")
+            .addEventListener("click", () => {
+                if (currentPage > 1) render(currentPage - 1);
+            });
+
+        document.getElementById("nextPage")
+            .addEventListener("click", () => {
+                render(currentPage + 1);
+            });
+
+        // Initial load
+        render(1);
 
         // Initial load.
         render();
 
     </script>
+    <option value="newest" selected>Newest first</option>
 </body>
 
 </html>
