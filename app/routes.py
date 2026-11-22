@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify, request, send_from_directory
 main = Blueprint("main", __name__)
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
-DB_FILE = ROOT_DIR / "data" / "processed" / "nyayalens_clean.db"
+DB_FILE = ROOT_DIR / "data" / "processed" / "nyayalens_fts.db"
 
 
 def get_db_connection():
@@ -48,16 +48,12 @@ def get_judgments():
 
     if query:
         where_clause += """
-            AND (
-                title LIKE ?
-                OR petitioner LIKE ?
-                OR respondent LIKE ?
-                OR citation LIKE ?
-                OR judge LIKE ?
+            AND id IN(
+                SELECT rowid FROM judgments_fts where judgments_fts MATCH ?
             )
         """
-        search_term = f"%{query}%"
-        where_params.extend([search_term] * 5)
+        fts_query = '"' + query.replace('"', '""') + '"'
+        where_params.append(fts_query)
 
     
     for value in (year_from, year_to):
@@ -92,17 +88,26 @@ def get_judgments():
         #as the data is sorted with year first so sorting in ASC results in the older ones before
 
     elif sort == "relevance" and query:
-        order_clause = f"""
+        order_clause = """
             CASE
                 WHEN LOWER(title) = LOWER(?) THEN 0
-                WHEN LOWER(title) LIKE LOWER(?) THEN 1
-                ELSE 2
+                WHEN LOWER(citation) = LOWER(?) THEN 1
+                WHEN LOWER(title) LIKE LOWER(?) THEN 2
+                ELSE 3
             END,
-            {date_expr} DESC,
+            (
+                SELECT bm25(judgments_fts, 5.0, 3.0, 3.0, 2.0, 5.0)
+                FROM judgments_fts
+                WHERE judgments_fts.rowid = judgments.id
+            ) ASC,
             id DESC
-        """
-        #assigning the priority to the perfect match ranks the highest 0, title match 1 and rest 2
-        order_params.extend([query, f"{query}%"])
+            """
+
+        order_params.extend([
+            query,
+            query,
+            f"{query}%"
+        ])
 
     else:
         order_clause = f"{date_expr} DESC, id DESC"
