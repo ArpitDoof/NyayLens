@@ -397,6 +397,26 @@
             color: var(--muted)
         }
 
+        .read-judgment {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 9px 14px;
+            border-radius: 6px;
+            background: #263b50;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .read-judgment:hover {
+            background: #365873;
+            color: white;
+        }
+
         .pagination {
             display: flex;
             justify-content: center;
@@ -660,7 +680,7 @@
                 <p>Search. Understand. Access Justice.</p>
             </div>
         </a>
-        <nav class="nav"><a href="#" class="active">Home</a><a href="#about">About</a><a href="#help">Help</a></nav>
+        <nav class="nav"><a href="/" class="active">Home</a><a href="/about">About</a></nav>
     </header>
     <section class="hero">
         <h2>Explore Legal Judgments with Ease</h2>
@@ -703,11 +723,32 @@
                 filters.</div>
         </section>
     </main>
+
     <footer>
-        <div>NyayLens&nbsp; | &nbsp;Making Legal Information Accessible</div>
-        <div class="links"><a href="#about">About</a><a href="#privacy">Privacy</a><a
-                href="mailto:contact@nyaylens.example">Contact</a></div>
+        <div class="footer-brand">
+            <div>NyayLens&nbsp; | &nbsp;Making Legal Information Accessible</div>
+
+            <p class="attribution">
+                Dataset:
+                <a href="https://huggingface.co/datasets/labofsahil/Indian-Supreme-Court-Judgments" target="_blank"
+                    rel="noopener noreferrer">
+                    Indian Supreme Court Judgments
+                </a>
+                · Source: AWS Open Data Registry
+                · Licensed under
+                <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">
+                    CC BY 4.0
+                </a>
+            </p>
+        </div>
+
+        <div class="links">
+            <a href="#about">About</a>
+            <a href="#privacy">Privacy</a>
+            <a href="mailto:contact@nyaylens.example">Contact</a>
+        </div>
     </footer>
+
     <script>
         let currentPage = 1;
 
@@ -795,8 +836,22 @@
 
                     <strong>Outcome:</strong>
                     ${escapeHTML(c.disposal_nature || "Not available")}
-                </p>
-            </article>
+                    </p>
+
+                    ${c.pdf_url ? `
+                        <a
+                            href="${escapeHTML(c.pdf_url)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="read-judgment"
+                        >
+                            <i class="fas fa-file-pdf"></i>
+                            Read Full Judgment
+                            ↗
+                        </a>
+                    ` : ""}
+
+                        </article>
         `).join("");
 
             } catch (error) {
@@ -861,7 +916,7 @@
         render();
 
     </script>
-    <option value="newest" selected>Newest first</option>
+    <option value="newest" selected></option>
 </body>
 
 </html>

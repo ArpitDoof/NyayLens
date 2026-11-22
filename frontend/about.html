@@ -1,0 +1,424 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>About NyayLens</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            color: #182536;
+            background: #f5f7fa;
+        }
+
+        .topbar {
+            min-height: 100px;
+            background: linear-gradient(110deg, #153d66, #0e3155);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 4%;
+            box-shadow: 0 2px 6px #0a24401c;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo {
+            font-size: 48px;
+        }
+
+        .brand h1 {
+            font-size: 32px;
+            margin: 0 0 4px;
+            font-weight: 800;
+        }
+
+        .brand p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 35px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 10px 0;
+        }
+
+        .nav a:hover,
+        .nav a.active {
+            border-bottom: 2px solid white;
+        }
+
+        .hero {
+            background: linear-gradient(110deg, #eaf2fc, #f7faff);
+            padding: 55px 20px;
+            text-align: center;
+            border-bottom: 1px solid #dce5f0;
+        }
+
+        .hero h2 {
+            font-size: 38px;
+            color: #122e4d;
+            margin: 0 0 14px;
+        }
+
+        .hero p {
+            max-width: 750px;
+            margin: auto;
+            color: #526174;
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 35px auto 55px;
+            padding: 0 22px;
+        }
+
+        .section {
+            background: white;
+            border: 1px solid #e0e6ee;
+            border-radius: 12px;
+            padding: 28px 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px #1e345008;
+        }
+
+        .section h2 {
+            color: #164b7c;
+            font-size: 23px;
+            margin: 0 0 15px;
+        }
+
+        .section p {
+            color: #455366;
+            font-size: 15px;
+            line-height: 1.8;
+            margin: 0 0 12px;
+        }
+
+        .section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .feature {
+            background: #f5f8fc;
+            border: 1px solid #e1e9f2;
+            border-radius: 9px;
+            padding: 19px;
+        }
+
+        .feature h3 {
+            color: #174d7c;
+            font-size: 16px;
+            margin: 0 0 9px;
+        }
+
+        .feature p {
+            font-size: 14px;
+        }
+
+        .source-links a {
+            color: #155bc0;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .source-links a:hover {
+            text-decoration: underline;
+        }
+
+        .disclaimer {
+            background: #fff9e9;
+            border: 1px solid #f0dfad;
+        }
+
+        .disclaimer h2 {
+            color: #795b13;
+        }
+
+        footer {
+            background: linear-gradient(110deg, #143b63, #0e2c4c);
+            color: white;
+            padding: 20px 4%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 14px;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 700px) {
+            .topbar {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .nav {
+                gap: 22px;
+            }
+
+            .hero h2 {
+                font-size: 29px;
+            }
+
+            .hero p {
+                font-size: 15px;
+            }
+
+            .section {
+                padding: 22px 19px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="topbar">
+        <a href="/" class="brand">
+            <div class="logo" aria-hidden="true">⚖</div>
+            <div>
+                <h1>NyayLens</h1>
+                <p>Search. Understand. Access Justice.</p>
+            </div>
+        </a>
+
+        <nav class="nav">
+            <a href="/">Home</a>
+            <a href="/about" class="active">About</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h2>About NyayLens</h2>
+        <p>
+            Making Indian Supreme Court judgments easier to discover,
+            search and access through a simple and intuitive platform.
+        </p>
+    </section>
+
+    <main class="container">
+
+        <section class="section">
+            <h2>What is NyayLens?</h2>
+
+            <p>
+                NyayLens is a legal judgment search platform designed to
+                improve access to Indian Supreme Court judgments. It provides
+                a centralised interface where users can search through a
+                large collection of judgments using case titles, parties,
+                judges, citations and keywords.
+            </p>
+
+            <p>
+                The platform aims to make legal information more accessible
+                by combining efficient search, relevant result ordering,
+                filtering and direct access to original judgment documents.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>What can you do with NyayLens?</h2>
+
+            <div class="features">
+
+                <div class="feature">
+                    <h3>Keyword Search</h3>
+                    <p>
+                        Search judgments using case titles, petitioner and
+                        respondent names, judges, citations and other indexed
+                        fields.
+                    </p>
+                </div>
+
+                <div class="feature">
+                    <h3>Relevance-Based Ranking</h3>
+                    <p>
+                        Search results are ranked using SQLite FTS5 and
+                        BM25 relevance scoring, with additional weighting
+                        for important fields.
+                    </p>
+                </div>
+
+                <div class="feature">
+                    <h3>Year Filters</h3>
+                    <p>
+                        Narrow your search by specifying a starting year
+                        and an ending year.
+                    </p>
+                </div>
+
+                <div class="feature">
+                    <h3>Sorting and Pagination</h3>
+                    <p>
+                        Sort results by relevance, newest first, oldest
+                        first or case title, and navigate through result pages.
+                    </p>
+                </div>
+
+                <div class="feature">
+                    <h3>Original Judgment PDFs</h3>
+                    <p>
+                        Open the original English judgment PDF directly
+                        from the search result without leaving the platform.
+                    </p>
+                </div>
+
+                <div class="feature">
+                    <h3>Case Information</h3>
+                    <p>
+                        View available case details, including citations,
+                        decision dates, parties, judges and disposal nature.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>How does it work?</h2>
+
+            <p>
+                NyayLens uses a SQLite database to store and organise
+                judgment metadata. SQLite FTS5 provides full-text search
+                capabilities over selected judgment fields.
+            </p>
+
+            <p>
+                When a user enters a query, the backend retrieves matching
+                judgments, applies the requested filters and sorting
+                preferences, and returns paginated results through a
+                Flask API.
+            </p>
+
+            <p>
+                BM25 scoring helps order matching documents by relevance.
+                Original judgment PDFs are accessed through links to the
+                publicly hosted dataset documents.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>Data Source and Attribution</h2>
+
+            <p>
+                The judgment collection used by NyayLens is based on the
+                Indian Supreme Court Judgments dataset published on
+                Hugging Face by labofsahil.
+            </p>
+
+            <p class="source-links">
+                Dataset:
+                <a href="https://huggingface.co/datasets/labofsahil/Indian-Supreme-Court-Judgments"
+                   target="_blank" rel="noopener noreferrer">
+                    Indian Supreme Court Judgments
+                </a>
+            </p>
+
+            <p>
+                The dataset is distributed under the
+                <a href="https://creativecommons.org/licenses/by/4.0/"
+                   target="_blank" rel="noopener noreferrer">
+                    Creative Commons Attribution 4.0 International
+                    (CC BY 4.0)
+                </a>
+                licence. Please refer to the original dataset page for
+                its complete attribution and licence information.
+            </p>
+
+            <p>
+                Original judgment PDFs are linked from the publicly
+                hosted dataset files on AWS S3.
+            </p>
+        </section>
+
+        <section class="section disclaimer">
+            <h2>Important Disclaimer</h2>
+
+            <p>
+                NyayLens is an academic and legal information retrieval
+                project. It is intended to help users discover and access
+                publicly available judicial documents.
+            </p>
+
+            <p>
+                The platform does not provide legal advice, interpret
+                judgments on behalf of users, or replace consultation
+                with a qualified legal professional. Users should refer
+                to the original judgment documents and authoritative
+                sources when relying on legal information.
+            </p>
+        </section>
+
+    </main>
+
+    <footer>
+        <div>
+            NyayLens&nbsp; | &nbsp;Making Legal Information Accessible
+        </div>
+
+        <div>
+            <a href="/">Home</a>
+            &nbsp; | &nbsp;
+            <a href="/about">About</a>
+        </div>
+    </footer>
+
+</body>
+</html>

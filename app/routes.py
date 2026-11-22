@@ -122,7 +122,7 @@ def get_judgments():
         rows = conn.execute(
             f"""
             SELECT id, title, petitioner, respondent,
-                   citation, decision_date, judge, disposal_nature
+                   citation, decision_date, judge, disposal_nature,path,year
             FROM judgments
             {where_clause}
             ORDER BY {order_clause}
@@ -133,6 +133,24 @@ def get_judgments():
 
     total_pages = math.ceil(total / per_page) if total else 0
 
+    results = []
+
+    for row in rows:
+        judgment = dict(row)
+
+        path = judgment["path"]
+        year = judgment["year"]
+
+        if path and year:
+            judgment["pdf_url"] = (
+                "https://indian-supreme-court-judgments.s3.amazonaws.com/"
+                f"data/pdf/year={year}/english/{path}_EN.pdf"
+            )
+        else:
+            judgment["pdf_url"] = None
+
+        results.append(judgment)
+
     return jsonify({
         "total": total,
         "returned": len(rows),
@@ -141,11 +159,18 @@ def get_judgments():
         "total_pages": total_pages,
         "has_next": page < total_pages,
         "has_prev": page > 1,
-        "results": [dict(row) for row in rows]
+        "results": results
     })
+
+   
 
 
 @main.route("/")
 def home():
     frontend_dir = ROOT_DIR / "frontend"
     return send_from_directory(frontend_dir, "index.html")
+
+@main.route("/about")
+def about():
+    frontend_dir = ROOT_DIR/"frontend"
+    return send_from_directory(frontend_dir,"about.html")
