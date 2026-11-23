@@ -36,9 +36,4 @@ for sql in indexes:
 conn.commit()
 
 print("Indexes created successfully.")
-
-print(conn.execute(
-    "PRAGMA index_list(judgments)"
-).fetchall())
-
 conn.close()

@@ -730,7 +730,7 @@
 
             <p class="attribution">
                 Dataset:
-                <a href="https://huggingface.co/datasets/labofsahil/Indian-Supreme-Court-Judgments" target="_blank"
+                <a href="https://registry.opendata.aws/indian-supreme-court-judgments/?utm_source=chatgpt.com" target="_blank"
                     rel="noopener noreferrer">
                     Indian Supreme Court Judgments
                 </a>
@@ -743,9 +743,7 @@
         </div>
 
         <div class="links">
-            <a href="#about">About</a>
-            <a href="#privacy">Privacy</a>
-            <a href="mailto:contact@nyaylens.example">Contact</a>
+            <a href="/about">About</a>
         </div>
     </footer>
 
@@ -794,7 +792,7 @@
              – ${(data.page - 1) * data.per_page + data.returned}
              of ${data.total} matching judgments`;
 
-                // Update pagination controls
+                
                 document.getElementById("prevPage").disabled = !data.has_prev;
                 document.getElementById("nextPage").disabled = !data.has_next;
 
@@ -861,9 +859,6 @@
             }
         }
 
-
-
-        // Escape HTML so database text is displayed safely.
         function escapeHTML(value) {
             return String(value).replace(/[&<>"']/g, char => ({
                 "&": "&amp;",
@@ -875,7 +870,7 @@
         }
 
 
-        // Event listeners.
+
         document.getElementById("searchBtn")
             .addEventListener("click", () => render(1));
 
@@ -909,10 +904,8 @@
                 render(currentPage + 1);
             });
 
-        // Initial load
+        
         render(1);
-
-        // Initial load.
         render();
 
     </script>

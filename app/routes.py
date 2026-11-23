@@ -71,8 +71,7 @@ def get_judgments():
         where_clause += " AND year <= ?"
         where_params.append(year_to)
 
-    # decision_date is stored as DD-MM-YYYY.
-    # Convert it to YYYY-MM-DD for correct chronological sorting.
+   
     date_expr = """
         substr(decision_date, 7, 4) || '-' ||
         substr(decision_date, 4, 2) || '-' ||
