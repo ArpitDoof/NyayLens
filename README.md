@@ -1,51 +1,48 @@
-# NyayaLens
+# NyayLens
 
 **Making Indian Supreme Court judgments easier to discover and access.**
 
-NyayaLens is a web-based legal judgment search application. It provides
-keyword-based full-text search, BM25 relevance ranking, year filtering,
-sorting, pagination, judgment metadata, and links to original English
-judgment PDFs.
+NyayLens is a web-based legal judgment search application. It provides keyword-based full-text search, BM25 relevance ranking, year filtering, sorting, pagination, judgment metadata, and links to original English judgment PDFs.
 
--   **Repository:** https://github.com/ArpitDoof/NyayLens
--   **Dataset:** [Indian Supreme Court
-    Judgments](https://huggingface.co/datasets/labofsahil/Indian-Supreme-Court-Judgments)
--   **Dataset licence:** [CC BY
-    4.0](https://creativecommons.org/licenses/by/4.0/)
+- **Repository:** https://github.com/ArpitDoof/NyayLens
+- **Dataset:** [Indian Supreme Court Judgments](https://huggingface.co/datasets/labofsahil/Indian-Supreme-Court-Judgments)
+- **Dataset licence:** [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
 
 ## Features
 
--   Full-text keyword search using SQLite FTS5.
--   BM25 relevance ranking with configured weights for title,
-    petitioner, respondent, judge, and citation.
--   Optional year-range filtering.
--   Sorting by relevance, newest, oldest, or case title (A--Z).
--   Paginated search results.
--   Display of available judgment metadata.
--   Direct links to original English judgment PDFs hosted on AWS S3.
--   An About page describing the project, data source, and limitations.
+- Full-text keyword search using SQLite FTS5.
+- BM25 relevance ranking with configurable weights for title, petitioner, respondent, judge, and citation.
+- Optional year-range filtering.
+- Sorting by relevance, newest, oldest, or case title (A–Z).
+- Paginated search results.
+- Display of available judgment metadata.
+- Direct links to original English judgment PDFs hosted on AWS S3.
+- An About page describing the project, data source, and limitations.
 
 ## Technology stack
 
-  Layer               Technologies
-  ------------------- -----------------------
-  Frontend            HTML, CSS, JavaScript
-  Backend             Python, Flask
-  Database            SQLite
-  Full-text search    SQLite FTS5
-  Ranking             BM25
-  Data preparation    Pandas, PyArrow
-  HTML parsing        BeautifulSoup
-  Production server   Gunicorn
-  Deployment          Render
-  Version control     Git, GitHub
+| Layer | Technologies |
+|---|---|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python, Flask |
+| Database | SQLite |
+| Full-text search | SQLite FTS5 |
+| Relevance ranking | BM25 |
+| HTML parsing | BeautifulSoup |
+| Data formats / exploration | Parquet, Jupyter Notebook |
+| Production server | Gunicorn |
+| Version control | Git, GitHub |
 
 ## Repository structure
 
-``` text
-NyayaLens/
+The tree below reflects the files currently present on the `main` branch. A `.gitkeep` file is used in otherwise-empty directories to ensure Git tracks the directory.
+
+```text
+NyayLens/
 ├── app.py
 ├── wsgi.py
+├── buildfts.py
+├── create_indexes.py
 ├── requirements.txt
 ├── .gitignore
 ├── README.md
@@ -53,289 +50,175 @@ NyayaLens/
 ├── app/
 │   ├── __init__.py
 │   ├── routes.py
-│   ├── static/
-│   └── templates/
+│   ├── templates/
+│   │   └── .gitkeep
+│   └── .gitkeep
 │
 ├── frontend/
 │   ├── index.html
 │   └── about.html
 │
+├── src/
+│   ├── scraper/
+│   │   ├── scraper.py
+│   │   └── .gitkeep
+│   └── database/
+│       └── .gitkeep
+│
 ├── data/
 │   └── processed/
+│       ├── cases_2025.parquet
 │       ├── nyayalens_clean.db
 │       ├── nyayalens_fts.db
-│       ├── nyayalens_full.db
-│       └── cases_2025.parquet
+│       └── nyayalens_full.db
 │
-├── src/
-│   ├── database/
-│   │   └── import_data.py
-│   ├── scraper/
-│   │   └── scraper.py
-│   ├── analysis/
-│   └── data/
-│
-├── notebooks/
-│   └── 01_data_exploration.ipynb
-│
-├── buildfts.py
-├── create_indexes.py
-├── inspect_paths.py
-├── testfts.py
-├── test_pdf_links.py
-│
-└── tests/
+└── notebooks/
+    └── 01_data_exploration.ipynb
 ```
 
 ## Code organisation and file responsibilities
 
-### Root-level files
+### 1. Root-level application files
 
-  -----------------------------------------------------------------------
-  File                                Role
-  ----------------------------------- -----------------------------------
-  `app.py`                            Local Flask entry point. Calls
-                                      `create_app()` and runs the
-                                      development server when executed
-                                      directly.
+| File | Responsibility |
+|---|---|
+| `app.py` | Local development entry point. Imports `create_app()`, creates the Flask application, and starts Flask's development server when run directly. |
+| `wsgi.py` | Exposes the Flask instance as `application` so a WSGI server such as Gunicorn can serve it. |
+| `requirements.txt` | Lists the Python packages and pinned versions used by the project environment. |
+| `.gitignore` | Prevents generated or machine-specific files from being tracked, including the virtual environment, Python cache, raw data, environment files, and editor settings. |
+| `README.md` | Project overview, setup guide, API notes, and documentation of the repository structure. |
 
-  `wsgi.py`                           Exposes the Flask application as
-                                      `application` for Gunicorn or
-                                      another WSGI server.
+### 2. `app/` — Flask backend
 
-  `requirements.txt`                  Lists the Python packages and
-                                      versions used by the project
-                                      environment.
+This package contains the web application and its HTTP routes.
 
-  `.gitignore`                        Excludes the virtual environment,
-                                      Python cache, raw data directory,
-                                      environment variables, and
-                                      editor-specific files.
+| File / directory | Responsibility |
+|---|---|
+| `app/__init__.py` | Defines the `create_app()` application factory. It creates the Flask instance, imports the `main` blueprint, registers it, and returns the configured app. |
+| `app/routes.py` | Implements the website routes and the `GET /api/judgments` endpoint. It reads request parameters, validates pagination, sorting, and year filters, queries SQLite/FTS5, applies ordering and pagination, builds PDF URLs, and returns JSON results. |
+| `app/templates/` | Reserved for Flask/Jinja templates. It currently contains only `.gitkeep`; the pages used by the application are in `frontend/` and are served directly. |
+| `app/.gitkeep` | Keeps the package directory represented in Git; it has no runtime behaviour. |
 
-  `README.md`                         Project overview, setup
-                                      instructions, and code-organisation
-                                      documentation.
-  -----------------------------------------------------------------------
+The database path used by the API is defined in `app/routes.py`:
 
-### `app/` --- Flask backend
+```python
+data/processed/nyayalens_fts.db
+```
 
-  -----------------------------------------------------------------------
-  File / directory                    Role
-  ----------------------------------- -----------------------------------
-  `app/__init__.py`                   Defines the application factory
-                                      `create_app()`, creates the Flask
-                                      instance, imports the `main`
-                                      blueprint, and registers it.
+The `get_db_connection()` helper opens this SQLite database and configures rows so they can be accessed by column name.
 
-  `app/routes.py`                     Defines the web routes and
-                                      `/api/judgments` endpoint. It
-                                      validates request parameters,
-                                      queries SQLite/FTS5, applies year
-                                      filters and sorting, handles
-                                      pagination, constructs PDF URLs,
-                                      and returns JSON.
+### 3. `frontend/` — user interface
 
-  `app/static/`                       Reserved for Flask static assets.
-                                      The committed directory currently
-                                      contains only a `.gitkeep`
-                                      placeholder.
+The frontend consists of standalone HTML pages with their styling and browser-side JavaScript.
 
-  `app/templates/`                    Reserved for Flask/Jinja templates.
-                                      The committed directory currently
-                                      contains only a `.gitkeep`
-                                      placeholder; the current pages are
-                                      served from `frontend/`.
-  -----------------------------------------------------------------------
+| File | Responsibility |
+|---|---|
+| `frontend/index.html` | Main search interface. It contains the search controls, year filters, sorting controls, results area, and pagination. Its JavaScript sends requests to the Flask API and renders the returned judgment records. |
+| `frontend/about.html` | About page describing NyayLens, its features and workflow, dataset attribution, and the legal-information disclaimer. |
 
-### `frontend/` --- User interface
+The Flask routes serve these pages:
 
-  -----------------------------------------------------------------------
-  File                                Role
-  ----------------------------------- -----------------------------------
-  `frontend/index.html`               Main search page. Contains the
-                                      search form, year filters, sorting
-                                      controls, result display,
-                                      pagination, CSS, and JavaScript
-                                      that calls the Flask API and
-                                      renders results.
+- `/` serves `frontend/index.html`.
+- `/about` serves `frontend/about.html`.
 
-  `frontend/about.html`               About page describing NyayaLens,
-                                      its features, operation, dataset
-                                      attribution, and legal-information
-                                      disclaimer.
-  -----------------------------------------------------------------------
+### 4. `src/` — supporting data and scraping code
 
-The frontend uses JavaScript `fetch()` requests to call the backend. The
-backend returns JSON, which is rendered in the browser.
+| File / directory | Responsibility |
+|---|---|
+| `src/scraper/scraper.py` | Defines `extract_case_details(html)`. It parses supplied HTML with BeautifulSoup and extracts the case title, available coram information, and key-value case details from the relevant case-details element. |
+| `src/scraper/.gitkeep` | Directory placeholder; no runtime behaviour. |
+| `src/database/.gitkeep` | Keeps the database source directory in Git. No database import script is currently present in this directory on `main`. |
 
-### `src/` --- Data preparation and supporting modules
+### 5. `data/processed/` — processed datasets and databases
 
-  -----------------------------------------------------------------------
-  File / directory                    Role
-  ----------------------------------- -----------------------------------
-  `src/database/import_data.py`       Reads the configured Parquet input,
-                                      selects required metadata columns,
-                                      cleans text and missing values,
-                                      normalises decision dates, checks
-                                      document paths, and imports records
-                                      into a SQLite `judgments` table.
+| File | Responsibility |
+|---|---|
+| `nyayalens_clean.db` | Cleaned SQLite database containing the structured judgment records. It is the source database copied by `buildfts.py`. |
+| `nyayalens_fts.db` | SQLite database used by the running application. It contains the judgment records and the FTS5 virtual table used for full-text search. |
+| `nyayalens_full.db` | Additional processed database retained in the repository. The current API configuration does not connect to this file. |
+| `cases_2025.parquet` | Processed Parquet dataset retained in the repository. |
 
-  `src/scraper/scraper.py`            Defines
-                                      `extract_case_details(html)`, which
-                                      uses BeautifulSoup to extract the
-                                      case title, coram information, and
-                                      key-value case details from
-                                      supplied HTML.
+The application reads from `nyayalens_fts.db`; the clean database is used as the starting point when generating the FTS-enabled database.
 
-  `src/analysis/`                     Reserved for analysis code;
-                                      currently contains only a
-                                      `.gitkeep` placeholder.
+### 6. Database utility scripts
 
-  `src/data/`                         Reserved for data-related source
-                                      files; currently contains only a
-                                      `.gitkeep` placeholder.
-  -----------------------------------------------------------------------
+| File | Responsibility |
+|---|---|
+| `create_indexes.py` | Creates SQLite indexes on the clean database for frequently used lookup and ordering fields: `year`, `case_id`, `path`, and a date expression derived from `decision_date`. These indexes are intended to improve filtering and ordering performance. |
+| `buildfts.py` | Copies `nyayalens_clean.db` to `nyayalens_fts.db`, creates an external-content FTS5 table named `judgments_fts`, and rebuilds the full-text index from the `judgments` table. |
 
-**Raw-data input note:** `src/database/import_data.py` expects
-`data/raw/metadata_2025.parquet`. The `data/raw/` directory is ignored
-by Git, so this input must be obtained separately before running the
-import utility.
+**Important:** These scripts modify or create database files under `data/processed/`. Run them only when you intend to regenerate the relevant database or index.
 
-### `data/processed/` --- Processed data
+### 7. `notebooks/` — exploration
 
-  -----------------------------------------------------------------------
-  File                                Role
-  ----------------------------------- -----------------------------------
-  `nyayalens_clean.db`                Cleaned SQLite database containing
-                                      structured judgment records. It is
-                                      the source database used by
-                                      `buildfts.py`.
-
-  `nyayalens_fts.db`                  Search database used by the web
-                                      application. It contains the
-                                      `judgments` table and the FTS5
-                                      virtual table `judgments_fts`.
-
-  `nyayalens_full.db`                 Additional database retained in the
-                                      processed-data directory. It is not
-                                      the database path currently
-                                      configured in `app/routes.py`.
-
-  `cases_2025.parquet`                Processed Parquet data file
-                                      retained in the repository.
-  -----------------------------------------------------------------------
-
-The application currently connects to `data/processed/nyayalens_fts.db`.
-
-### Database and testing utilities
-
-  -----------------------------------------------------------------------
-  File                                Role
-  ----------------------------------- -----------------------------------
-  `buildfts.py`                       Copies `nyayalens_clean.db` to
-                                      `nyayalens_fts.db`, creates an
-                                      external-content FTS5 virtual table
-                                      over selected fields, and rebuilds
-                                      the full-text index.
-
-  `create_indexes.py`                 Creates SQLite indexes on selected
-                                      columns/expressions in the clean
-                                      database, including year, case ID,
-                                      path, and a date-ordering
-                                      expression.
-
-  `inspect_paths.py`                  Uses PyArrow to inspect selected
-                                      Parquet fields and the HTML
-                                      associated with a document path.
-                                      Expects the raw dataset under
-                                      `data/raw/`.
-
-  `testfts.py`                        Runs a sample FTS5 query, joins
-                                      matches to judgment metadata, and
-                                      prints BM25 relevance scores.
-
-  `test_pdf_links.py`                 Reads sample document paths and
-                                      years from the FTS database and
-                                      prints their corresponding AWS S3
-                                      PDF URLs.
-  -----------------------------------------------------------------------
-
-### `notebooks/` and `tests/`
-
--   `notebooks/01_data_exploration.ipynb` --- Jupyter notebook used for
-    dataset exploration.
--   `tests/` --- Reserved for application tests; currently contains a
-    `.gitkeep` placeholder. The standalone test utilities are located at
-    the repository root.
+| File | Responsibility |
+|---|---|
+| `notebooks/01_data_exploration.ipynb` | Jupyter notebook for exploring and inspecting the judgment dataset during development. |
 
 ## Application workflow
 
-1.  The user enters a keyword query and optionally selects a year range
-    and sort order.
-2.  `frontend/index.html` sends an HTTP GET request to `/api/judgments`.
-3.  `app/routes.py` validates the request parameters and constructs the
-    SQL/FTS5 query.
-4.  SQLite FTS5 searches the indexed fields. For relevance sorting with
-    a query, the backend uses the BM25 function with configured column
-    weights.
-5.  The backend applies year filters, sorting, and pagination, then
-    returns judgment metadata and pagination details as JSON.
-6.  For results with a document path and year, the backend constructs an
-    English PDF URL. The frontend displays a link to open the original
-    PDF hosted on AWS S3.
+1. A user enters a search phrase and may select a year range, sort order, and page.
+2. The browser-side code in `frontend/index.html` sends a GET request to `/api/judgments`.
+3. The route in `app/routes.py` validates the request parameters.
+4. For a non-empty keyword query, SQLite FTS5 matches records through the `judgments_fts` virtual table.
+5. The backend applies the year filters, requested ordering, and pagination.
+6. The API returns judgment metadata and pagination information as JSON.
+7. When a record has a document path and year, the backend constructs a URL for its original English PDF on the public AWS S3 dataset endpoint. The frontend exposes that link to the user.
 
-### FTS5 indexed fields and BM25 weights
+## Full-text search and relevance ranking
 
-The `judgments_fts` virtual table indexes:
+The FTS5 virtual table created by `buildfts.py` indexes these judgment metadata fields:
 
--   `title`
--   `petitioner`
--   `respondent`
--   `judge`
--   `citation`
+- `title`
+- `petitioner`
+- `respondent`
+- `judge`
+- `citation`
 
-The current API configures these BM25 weights:
+For relevance sorting, `app/routes.py` calls SQLite's BM25 ranking function with the following field weights:
 
-  Field          Weight
-  ------------ --------
-  Title             5.0
-  Petitioner        3.0
-  Respondent        3.0
-  Judge             2.0
-  Citation          5.0
+| Field | Weight |
+|---|---:|
+| Title | 5.0 |
+| Petitioner | 3.0 |
+| Respondent | 3.0 |
+| Judge | 2.0 |
+| Citation | 5.0 |
 
-The backend orders BM25 scores in ascending order; lower scores indicate
-a better match.
+The query orders by the BM25 value in ascending order; within SQLite FTS5, a numerically lower BM25 value represents a better match.
 
 ## API reference
 
 ### `GET /api/judgments`
 
-  Parameter     Description
-  ------------- ------------------------------------------------------
-  `q`           Optional keyword query.
-  `year_from`   Optional lower year bound.
-  `year_to`     Optional upper year bound.
-  `sort`        `relevance`, `newest`, `oldest`, or `az`.
-  `page`        1-based page number; default is `1`.
-  `per_page`    Results per page; default is `20`, maximum is `100`.
+| Parameter | Description |
+|---|---|
+| `q` | Optional keyword query. |
+| `year_from` | Optional lower year bound. |
+| `year_to` | Optional upper year bound. |
+| `sort` | Sort order: `relevance`, `newest`, `oldest`, or `az`. Defaults to `newest`. |
+| `page` | 1-based page number. Defaults to `1`. |
+| `per_page` | Number of results per page. Defaults to `20`; maximum is `100`. |
 
-Example:
+Example request:
 
-``` text
+```text
 /api/judgments?q=fundamental%20rights&year_from=2000&year_to=2024&sort=relevance&page=1&per_page=20
 ```
 
-The JSON response contains `total`, `returned`, `page`, `per_page`,
-`total_pages`, `has_next`, `has_prev`, and `results`. Each result
-contains judgment metadata and a `pdf_url` when its document path and
-year are available.
+The JSON response includes:
+
+- `total`: total number of matching records.
+- `returned`: number of records in the current response.
+- `page`, `per_page`, and `total_pages`: pagination details.
+- `has_next` and `has_prev`: whether adjacent pages exist.
+- `results`: the judgment metadata for the current page, including `pdf_url` when a PDF path can be constructed.
 
 ## Run locally
 
 ### 1. Clone the repository
 
-``` bash
+```bash
 git clone https://github.com/ArpitDoof/NyayLens.git
 cd NyayLens
 ```
@@ -344,75 +227,56 @@ cd NyayLens
 
 macOS / Linux:
 
-``` bash
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
 Windows PowerShell:
 
-``` powershell
+```powershell
 py -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install dependencies
 
-``` bash
+```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-### 4. Run the Flask application
+### 4. Start the application
 
-``` bash
+```bash
 python app.py
 ```
 
-Open the local URL printed by Flask (usually `http://127.0.0.1:5000/`).
+Open the local address printed by Flask (usually [http://127.0.0.1:5000/](http://127.0.0.1:5000/)).
 
-The repository includes the processed SQLite database files. The web
-application specifically uses `data/processed/nyayalens_fts.db`; this
-file must be present for the search API to work.
+The repository contains the processed SQLite databases. The search API specifically expects `data/processed/nyayalens_fts.db` to be present.
 
 ### Production serving
 
-The WSGI entry point is `wsgi.py`. The production server command used
-for deployment is:
+The WSGI application is exposed in `wsgi.py`. It can be served with Gunicorn:
 
-``` bash
+```bash
 gunicorn wsgi:application
 ```
 
 ## Dataset and attribution
 
-NyayaLens uses the [Indian Supreme Court Judgments
-dataset](https://huggingface.co/datasets/labofsahil/Indian-Supreme-Court-Judgments)
-published by `labofsahil`. The dataset is identified as being
-distributed under the [Creative Commons Attribution 4.0 International
-licence (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
-Consult the dataset page for complete attribution details and applicable
-conditions.
+NyayLens uses the [Indian Supreme Court Judgments dataset](https://huggingface.co/datasets/labofsahil/Indian-Supreme-Court-Judgments) published by `labofsahil`. The dataset page identifies the licence as [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). Refer to the original dataset page for complete attribution information and applicable conditions.
 
-The original English judgment PDFs are linked using the public AWS S3
-object paths associated with the dataset.
+The application constructs links to original English judgment PDFs using the document path and year associated with each record.
 
 ## Scope and limitations
 
--   The application searches the available indexed metadata fields; it
-    does not currently perform semantic search.
--   Search results depend on the records and fields present in the
-    dataset and FTS5 index.
--   The `src/analysis/` directory is reserved for possible future work;
-    an analytics dashboard is not part of the currently implemented
-    feature set.
--   NyayaLens is an information-retrieval application. It does not
-    provide legal advice or replace consultation with a qualified legal
-    professional.
+- The application performs full-text retrieval over the fields indexed in SQLite FTS5; it does not currently implement semantic search.
+- Results depend on the metadata available in the dataset and the fields populated in the search index.
+- `src/database/`, `app/templates/`, and other placeholder directories may be intended for future development; they currently contain no implemented modules beyond placeholders.
+- NyayLens is a legal information retrieval project. It does not provide legal advice or replace consultation with a qualified legal professional.
 
 ## Disclaimer
 
-NyayaLens is an academic project intended to make publicly available
-Indian Supreme Court judgment information easier to search and access.
-Users should consult the original judgment and authoritative legal
-sources before relying on information for legal purposes.
+NyayLens is an academic project intended to make publicly available Indian Supreme Court judgment information easier to search and access. Users should consult the original judgment and authoritative legal sources before relying on information for legal purposes.
